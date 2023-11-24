@@ -17,6 +17,9 @@ class ViewController: UIViewController {
     var difficultnessTimer: Timer?
     var speed = 0.5
     var isGameOver = false
+    ///prevent two quick swipes
+    ///set to true when user can swipe again
+    var directionDebounce = true
     
     var currentDirection: Snake.Direction = .up
     
@@ -128,32 +131,38 @@ class ViewController: UIViewController {
     }
     
     @objc func swipedUp(_ sender:UISwipeGestureRecognizer) {
+        guard self.directionDebounce == true else {return}
         guard currentDirection != .down && currentDirection != .up else {return}
         currentDirection = .up
-//        move(.up)
+        self.directionDebounce = false
     }
     
     @objc func swipedDown(_ sender:UISwipeGestureRecognizer) {
+        guard self.directionDebounce == true else {return}
         guard currentDirection != .up && currentDirection != .down else {return}
         currentDirection = .down
-//        move(.down)
+        self.directionDebounce = false
     }
     
     @objc func swipedLeft(_ sender:UISwipeGestureRecognizer) {
+        guard self.directionDebounce == true else {return}
         guard currentDirection != .right && currentDirection != .left else {return}
         currentDirection = .left
-//        move(.left)
+        self.directionDebounce = false
     }
     
     @objc func swipedRight(_ sender:UISwipeGestureRecognizer) {
+        guard self.directionDebounce == true else {return}
         guard currentDirection != .left && currentDirection != .right else {return}
         currentDirection = .right
-//        move(.right)
+        self.directionDebounce = false
     }
     
     func debounceMove() {
         moveTimer = Timer.scheduledTimer(withTimeInterval: self.speed, repeats: false) { [weak self] timer in
             guard let self else {return}
+            
+            UIImpactFeedbackGenerator(style: .light).impactOccurred(intensity: 0.6)
             
             //move
             self.snake.move(to: self.currentDirection)
@@ -181,6 +190,7 @@ class ViewController: UIViewController {
             
             //recuresive
             self.debounceMove()
+            self.directionDebounce = true
         }
     }
     
