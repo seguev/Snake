@@ -17,7 +17,7 @@ class Node: UIView {
         let size = CGSize(width: 20, height: 20)
         super.init(frame: .init(origin: frame.origin, size: size))
         self.backgroundColor = .blue
-        self.layer.cornerRadius = 7
+        self.layer.cornerRadius = 9
     }
     
     required init?(coder: NSCoder) {
@@ -33,31 +33,31 @@ class Snake {
     init(_ point:CGPoint,superView:UIView) {
         self.superView = superView
         self.head = .init(frame: .init(origin: .init(x: point.x-10, y: point.y-10), size: .zero))
+        addTail(.up)
     }
     
     func move(to direction:Direction) {
         //feed direction
-        feed(direction)
+        addHead(direction)
         //remove last
         removeTail()
     }
     
     ///insert
-    func feed(_ direction:Direction) {
+    private func addHead(_ direction:Direction) {
         
-        //Same as parent size
-        let (w,h) = (self.head.frame.width,self.head.frame.height)
+        let h = self.head.frame.height
         
         let newNodeRect: CGRect!
         switch direction {
         case .up:
-             newNodeRect = CGRect(x: head.frame.minX, y: head.frame.minY - 20, width:w , height: h)
+            newNodeRect = CGRect(origin: .init(x: head.frame.minX, y: head.frame.minY - h), size: .zero)
         case .down:
-            newNodeRect = CGRect(x: head.frame.minX, y: head.frame.maxY , width:w , height: h)
+            newNodeRect = CGRect(origin: .init(x: head.frame.minX, y: head.frame.maxY), size: .zero)
         case .left:
-            newNodeRect = CGRect(x: head.frame.minX - 20, y: head.frame.minY, width:w , height: h)
+            newNodeRect = CGRect(origin: .init(x: head.frame.minX - h, y: head.frame.minY), size: .zero)
         case .right:
-            newNodeRect = CGRect(x: head.frame.maxX , y: head.frame.minY, width:w , height: h)
+            newNodeRect = CGRect(origin: .init(x: head.frame.maxX, y: head.frame.minY), size: .zero)
         }
         
         
@@ -76,7 +76,43 @@ class Snake {
         }
     }
     
+    func addTail(_ movingDirection:Direction) {
+        var node = head
+        while node.nextNode != nil {
+            node = node.nextNode!
+        }
+        let tail = node //grab tail
+        let newNode = Node() //init new node
+        tail.nextNode = newNode //set tail.next as newNode
+        
+        //place newNode at the end
+        let newNodeOrigin: CGPoint = switch movingDirection {
+            
+        case .up:
+            CGPoint(x: tail.frame.minX, y: tail.frame.minY)
+        case .down:
+            CGPoint(x: tail.frame.minX, y: tail.frame.minY-tail.frame.height)
+        case .left:
+            CGPoint(x: tail.frame.maxX, y: tail.frame.minY)
+        case .right:
+            CGPoint(x: tail.frame.minX-tail.frame.width, y: tail.frame.minY)
+        }
+        newNode.frame = .init(origin: newNodeOrigin, size: .zero)
+        
+        //add tail to view
+        superView.addSubview(newNode)
+    }
     
+    var frames: [CGRect] {
+        var frames: [CGRect] = []
+        frames.append(head.frame)
+        var node = head
+        while node.nextNode != nil {
+            node = node.nextNode!
+            frames.append(node.frame)
+        }
+        return frames
+    }
     
     func length() -> Int {
         var count = 1
@@ -96,7 +132,7 @@ class Snake {
         return node!
     }
     
-    func removeTail() {
+    private func removeTail() {
         var node = head
         var pre: Node?
         while node.nextNode != nil {
